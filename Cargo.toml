@@ -1,0 +1,7 @@
+[package]
+name = "evomush"
+version = "0.1.0"
+authors = ["Geordon Worley <vadixidav@gmail.com>"]
+
+[dependencies]
+gapush = {git = "ssh://git@github.com/vadixidav/gapush.git", rev = "971867986254849095ec73c8969b22b0a26418ef"}
