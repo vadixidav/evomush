@@ -8,8 +8,11 @@ extern crate gapush;
 extern crate glowygraph as gg;
 extern crate glium;
 extern crate glium_sdl2;
+extern crate zoom;
+extern crate nalgebra;
 
 mod circle;
+mod cell;
 
 use gg::render2::*;
 
