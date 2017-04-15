@@ -8,6 +8,7 @@ const DEFAULT_LAMBDA: f64 = 8192.0;
 const LAMBDA_SELF_POINT: f64 = 512.0;
 const MAXIMUM_MUTATES: usize = 1024;
 
+const INIT_EXECUTION_TIME: usize = 512;
 const INIT_LEN: usize = 128;
 const INIT_CROSSOVERS: usize = 4;
 const CYCLE_LEN: usize = 128;
@@ -46,9 +47,15 @@ impl Genome {
         Genome {
             init: Chromosome::new_rand(rng, INIT_LEN, INIT_CROSSOVERS),
             cycle: Chromosome::new_rand(rng, CYCLE_LEN, CYCLE_CROSSOVERS),
-            connection_elasticity: Chromosome::new_rand(rng, CONNECTION_ELASTICITY_LEN, CONNECTION_ELASTICITY_CROSSOVERS),
-            connection_signal: Chromosome::new_rand(rng, CONNECTION_SIGNAL_LEN, CONNECTION_SIGNAL_CROSSOVERS),
-            neighbor_detect: Chromosome::new_rand(rng, NEIGHBOR_DETECT_LEN, NEIGHBOR_DETECT_CROSSOVERS),
+            connection_elasticity: Chromosome::new_rand(rng,
+                                                        CONNECTION_ELASTICITY_LEN,
+                                                        CONNECTION_ELASTICITY_CROSSOVERS),
+            connection_signal: Chromosome::new_rand(rng,
+                                                    CONNECTION_SIGNAL_LEN,
+                                                    CONNECTION_SIGNAL_CROSSOVERS),
+            neighbor_detect: Chromosome::new_rand(rng,
+                                                  NEIGHBOR_DETECT_LEN,
+                                                  NEIGHBOR_DETECT_CROSSOVERS),
             repulsion: Chromosome::new_rand(rng, REPULSION_LEN, REPULSION_CROSSOVERS),
             lambda: DEFAULT_LAMBDA,
         }
@@ -68,7 +75,8 @@ impl Genome {
 
         self.init.mutate(MAXIMUM_MUTATES, &exp, rng);
         self.cycle.mutate(MAXIMUM_MUTATES, &exp, rng);
-        self.connection_elasticity.mutate(MAXIMUM_MUTATES, &exp, rng);
+        self.connection_elasticity
+            .mutate(MAXIMUM_MUTATES, &exp, rng);
         self.connection_signal.mutate(MAXIMUM_MUTATES, &exp, rng);
         self.neighbor_detect.mutate(MAXIMUM_MUTATES, &exp, rng);
         self.repulsion.mutate(MAXIMUM_MUTATES, &exp, rng);
@@ -78,7 +86,8 @@ impl Genome {
         Genome {
             init: self.init.mate(&other.init),
             cycle: self.cycle.mate(&other.cycle),
-            connection_elasticity: self.connection_elasticity.mate(&other.connection_elasticity),
+            connection_elasticity: self.connection_elasticity
+                .mate(&other.connection_elasticity),
             connection_signal: self.connection_signal.mate(&other.connection_signal),
             neighbor_detect: self.neighbor_detect.mate(&other.neighbor_detect),
             repulsion: self.repulsion.mate(&other.repulsion),
@@ -87,7 +96,56 @@ impl Genome {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Brain<IH, IntH, FloatH> {
     genome: Genome,
     machine: gapush::Machine<SimpleInstruction, IH, IntH, FloatH>,
+}
+
+impl<IH, IntH, FloatH> Brain<IH, IntH, FloatH> {
+    pub fn new_rand<R: Rng>(max_size: usize,
+                            rng: &mut R,
+                            ins_handler: IH,
+                            int_handler: IntH,
+                            float_handler: FloatH)
+                            -> Brain<IH, IntH, FloatH>
+        where IH: FnMut() -> SimpleInstruction,
+              IntH: FnMut() -> i64,
+              FloatH: FnMut() -> f64
+    {
+        let genome = Genome::new_rand(rng);
+        let mut machine = gapush::Machine::new(max_size, ins_handler, int_handler, float_handler);
+        // Execute the initialization routine.
+        machine.provide_and_cycle_until(INIT_EXECUTION_TIME, (&genome.init).into());
+        Brain {
+            genome: genome,
+            machine: machine,
+        }
+    }
+
+    pub fn mate(&self,
+                other: &Self,
+                child_max_size: usize,
+                ins_handler: IH,
+                int_handler: IntH,
+                float_handler: FloatH)
+                -> Brain<IH, IntH, FloatH>
+        where IH: FnMut() -> SimpleInstruction,
+              IntH: FnMut() -> i64,
+              FloatH: FnMut() -> f64
+    {
+        let genome = self.genome.mate(&other.genome);
+        let mut machine =
+            gapush::Machine::new(child_max_size, ins_handler, int_handler, float_handler);
+        // Execute the initialization routine.
+        machine.provide_and_cycle_until(INIT_EXECUTION_TIME, (&genome.init).into());
+        Brain {
+            genome: genome,
+            machine: machine,
+        }
+    }
+
+    pub fn mutate<R: Rng>(&mut self, rng: &mut R) {
+        self.genome.mutate(rng);
+    }
 }
