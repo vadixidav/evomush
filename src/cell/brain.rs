@@ -1,6 +1,6 @@
 use gapush;
 
-use gapush::simple::{Chromosome, SimpleInstruction};
+use gapush::simple::{Chromosome, SimpleInstruction, PlainOp};
 use rand::Rng;
 use rand::distributions::{Exp, IndependentSample};
 
@@ -94,27 +94,33 @@ impl Genome {
             lambda: (self.lambda + other.lambda) * 0.5,
         }
     }
+
+    /// Gets the size which is left over after considering the size of the genome.
+    fn leftover_size_from(&self, size: usize) -> usize {
+        size.checked_sub(self.init.gene_len())
+            .and_then(|n| n.checked_sub(self.cycle.gene_len()))
+            .and_then(|n| n.checked_sub(self.connection_elasticity.gene_len()))
+            .and_then(|n| n.checked_sub(self.connection_signal.gene_len()))
+            .and_then(|n| n.checked_sub(self.neighbor_detect.gene_len()))
+            .and_then(|n| n.checked_sub(self.repulsion.gene_len()))
+            .unwrap_or(0)
+    }
 }
 
 #[derive(Clone, Debug)]
-pub struct Brain<IH, IntH, FloatH> {
+pub struct Brain {
     genome: Genome,
-    machine: gapush::Machine<SimpleInstruction, IH, IntH, FloatH>,
+    machine:
+        gapush::Machine<SimpleInstruction, fn() -> SimpleInstruction, fn() -> i64, fn() -> f64>,
 }
 
-impl<IH, IntH, FloatH> Brain<IH, IntH, FloatH> {
-    pub fn new_rand<R: Rng>(max_size: usize,
-                            rng: &mut R,
-                            ins_handler: IH,
-                            int_handler: IntH,
-                            float_handler: FloatH)
-                            -> Brain<IH, IntH, FloatH>
-        where IH: FnMut() -> SimpleInstruction,
-              IntH: FnMut() -> i64,
-              FloatH: FnMut() -> f64
-    {
+impl Brain {
+    pub fn new_rand<R: Rng>(max_size: usize, rng: &mut R) -> Brain {
         let genome = Genome::new_rand(rng);
-        let mut machine = gapush::Machine::new(max_size, ins_handler, int_handler, float_handler);
+        let mut machine = gapush::Machine::new(max_size,
+                                               instruction_handler as fn() -> SimpleInstruction,
+                                               int_handler as fn() -> i64,
+                                               float_handler as fn() -> f64);
         // Execute the initialization routine.
         machine.provide_and_cycle_until(INIT_EXECUTION_TIME, (&genome.init).into());
         Brain {
@@ -123,20 +129,12 @@ impl<IH, IntH, FloatH> Brain<IH, IntH, FloatH> {
         }
     }
 
-    pub fn mate(&self,
-                other: &Self,
-                child_max_size: usize,
-                ins_handler: IH,
-                int_handler: IntH,
-                float_handler: FloatH)
-                -> Brain<IH, IntH, FloatH>
-        where IH: FnMut() -> SimpleInstruction,
-              IntH: FnMut() -> i64,
-              FloatH: FnMut() -> f64
-    {
+    pub fn mate(&self, other: &Self, child_max_size: usize) -> Brain {
         let genome = self.genome.mate(&other.genome);
-        let mut machine =
-            gapush::Machine::new(child_max_size, ins_handler, int_handler, float_handler);
+        let mut machine = gapush::Machine::new(child_max_size,
+                                               instruction_handler as fn() -> SimpleInstruction,
+                                               int_handler as fn() -> i64,
+                                               float_handler as fn() -> f64);
         // Execute the initialization routine.
         machine.provide_and_cycle_until(INIT_EXECUTION_TIME, (&genome.init).into());
         Brain {
@@ -148,4 +146,20 @@ impl<IH, IntH, FloatH> Brain<IH, IntH, FloatH> {
     pub fn mutate<R: Rng>(&mut self, rng: &mut R) {
         self.genome.mutate(rng);
     }
+
+    pub fn set_size(&mut self, size: usize) {
+        self.machine.state.max_size = self.genome.leftover_size_from(size);
+    }
+}
+
+fn instruction_handler() -> SimpleInstruction {
+    SimpleInstruction::PlainOp(PlainOp::Nop)
+}
+
+fn int_handler() -> i64 {
+    0
+}
+
+fn float_handler() -> f64 {
+    0.0
 }
