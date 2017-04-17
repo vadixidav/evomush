@@ -1,3 +1,4 @@
+#![feature(conservative_impl_trait)]
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
@@ -10,6 +11,7 @@ extern crate glium;
 extern crate glium_sdl2;
 extern crate zoom;
 extern crate nalgebra;
+extern crate petgraph;
 
 mod circle;
 mod cell;
@@ -46,7 +48,7 @@ fn main() {
         glowy.render_qbeziers_flat(&mut target,
                                    [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                                    [[hscale, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
-                                   &circle::make_circle([1.0, 0.0, 0.0, 1.0]));
+                                   &circle::make_circle([1.0, 0.0, 0.0, 1.0]).collect::<Vec<_>>());
         // do drawing here...
         target.finish().unwrap();
 
@@ -63,4 +65,12 @@ fn main() {
             }
         }
     }
+}
+
+struct CellContainer {
+    pub cell: cell::Cell,
+    /// The current delta.
+    pub delta: Option<cell::Delta>,
+    /// The previous delta.
+    pub prev_delta: Option<cell::Delta>,
 }
