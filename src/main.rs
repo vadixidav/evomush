@@ -36,6 +36,9 @@ fn main() {
     let mut running = true;
     let mut event_pump = sdl_context.event_pump().unwrap();
 
+    // Create the graph which is used to store the cells and all their connections.
+    let mut graph = petgraph::Graph::<CellContainer, (), petgraph::Undirected>::new_undirected();
+
     while running {
         use glium::Surface;
 
@@ -52,6 +55,7 @@ fn main() {
                                    [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                                    [[hscale, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                                    &circle::make_circle([1.0, 0.0, 0.0, 1.0]).collect::<Vec<_>>());
+        
         // End draw.
         target.finish().unwrap();
 
