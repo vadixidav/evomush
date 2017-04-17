@@ -14,11 +14,13 @@ pub struct Cell {
 }
 
 impl Cell {
-    pub fn new_rand<R: Rng>(rng: &mut R, particle: particle::BasicParticle<na::Vector2<f64>, f64>) -> Cell {
+    pub fn new_rand<R: Rng>(rng: &mut R,
+                            particle: particle::BasicParticle<na::Vector2<f64>, f64>)
+                            -> Cell {
         Cell {
             energy: INIT_ENERGY,
             particle: particle,
-            brain: brain::Brain::new_rand(energy_to_size(INIT_ENERGY), rng)
+            brain: brain::Brain::new_rand(energy_to_size(INIT_ENERGY), rng),
         }
     }
 
