@@ -43,17 +43,19 @@ fn main() {
         let dims = display.get_framebuffer_dimensions();
         let hscale = dims.1 as f32 / dims.0 as f32;
 
+        // Begin draw.
         let mut target = display.draw();
+        // Clear screen.
         target.clear_color(0.0, 0.0, 0.0, 1.0);
+        // Draw circles.
         glowy.render_qbeziers_flat(&mut target,
                                    [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                                    [[hscale, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                                    &circle::make_circle([1.0, 0.0, 0.0, 1.0]).collect::<Vec<_>>());
-        // do drawing here...
+        // End draw.
         target.finish().unwrap();
 
-        // Event loop: includes all windows
-
+        // Handle events.
         for event in event_pump.poll_iter() {
             use sdl2::event::Event;
 
