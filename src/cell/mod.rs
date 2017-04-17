@@ -3,7 +3,7 @@ mod brain;
 use zoom::*;
 use nalgebra as na;
 use rand::Rng;
-use gapush::simple::{Chromosome, SimpleInstruction, PlainOp};
+use gapush::simple::{SimpleInstruction, PlainOp};
 
 const INIT_ENERGY: usize = 1 << 20;
 const SIZE_TO_ENERGY_RATIO: f64 = 0.05;
