@@ -12,14 +12,25 @@ extern crate glium_sdl2;
 extern crate zoom;
 extern crate nalgebra;
 extern crate petgraph;
+extern crate num;
 
 mod circle;
 mod cell;
+mod aux;
 
+use aux::*;
 use gg::render2::*;
+
+/// Create the graph which is used to store the cells and all their connections.
+/// The cell it goes out from is the first weight and vice versa.
+type CellGraph = petgraph::Graph<CellContainer, (f64, f64)>;
+
+
+const SEED: [u64; 4] = [0, 1, 2, 3];
 
 fn main() {
     use glium_sdl2::DisplayBuild;
+    use rand::SeedableRng;
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let gl_subsystem = video_subsystem.gl_attr();
@@ -36,11 +47,14 @@ fn main() {
     let mut running = true;
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    // Create the graph which is used to store the cells and all their connections.
-    let mut graph = petgraph::Graph::<CellContainer, (), petgraph::Undirected>::new_undirected();
+    let mut graph = CellGraph::new();
+    let mut rng = rand::Isaac64Rng::from_seed(&SEED);
 
     while running {
         use glium::Surface;
+
+        // Generate cells randomly.
+        generate_cells(&mut graph, &mut rng);
 
         // Get dimensions each frame.
         let dims = display.get_framebuffer_dimensions();
@@ -73,7 +87,7 @@ fn main() {
     }
 }
 
-struct CellContainer {
+pub struct CellContainer {
     pub cell: cell::Cell,
     /// The current delta.
     pub delta: Option<cell::Delta>,
