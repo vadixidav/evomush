@@ -67,7 +67,8 @@ impl Cell {
         let (divide, divide_cycles) = self.brain.run_divide();
         let divide = divide.unwrap_or(false);
         self.energy = self.energy.checked_sub((ENERGY_TO_EXECUTION_RATIO *
-            (cycle_cycles + connection_cycles + repulsion_cycles + die_cycles) as f64) as usize).unwrap_or(0);
+            (cycle_cycles + connection_cycles + repulsion_cycles + die_cycles + divide_cycles) as f64) as usize)
+            .unwrap_or(0);
         Delta{
             connections: connection_deltas,
             repulsion: repulsion,
