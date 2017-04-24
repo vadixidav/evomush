@@ -23,7 +23,7 @@ use gg::render2::*;
 
 /// Create the graph which is used to store the cells and all their connections.
 /// The cell it goes out from is the first weight and vice versa.
-type CellGraph = petgraph::Graph<CellContainer, (f64, f64)>;
+type CellGraph = petgraph::Graph<CellContainer, (cell::ConnectionDelta, cell::ConnectionDelta)>;
 
 
 const SEED: [u64; 4] = [0, 1, 2, 3];
@@ -55,6 +55,38 @@ fn main() {
 
         // Generate cells randomly.
         generate_cells(&mut graph, &mut rng);
+
+        // TODO: Separate the bodies in this into functions.
+        // Update all edge elasticities.
+        for nix in graph.node_indices() {
+            use petgraph::Direction::*;
+
+            // Handle the outgoing connection deltas.
+            {
+                let out_deltas = graph.node_weight(nix)
+                    .and_then(|container| container.delta.as_ref())
+                    .map(|delta| delta.out_connections.clone());
+                let mut out_walker = graph.neighbors_directed(nix, Outgoing).detach();
+                let mut out_counter = 0..;
+                while let (Some(out_ix), Some(eix)) = (out_counter.next(), out_walker.next_edge(&graph)) {
+                    graph.edge_weight_mut(eix).unwrap().0 =
+                        out_deltas.as_ref().map(|deltas| deltas[out_ix].clone()).unwrap_or_default();
+                }
+            }
+
+            // Handle the incoming connection deltas.
+            {
+                let in_deltas = graph.node_weight(nix)
+                    .and_then(|container| container.delta.as_ref())
+                    .map(|delta| delta.in_connections.clone());
+                let mut in_walker = graph.neighbors_directed(nix, Incoming).detach();
+                let mut in_counter = 0..;
+                while let (Some(in_ix), Some(eix)) = (in_counter.next(), in_walker.next_edge(&graph)) {
+                    graph.edge_weight_mut(eix).unwrap().1 =
+                        in_deltas.as_ref().map(|deltas| deltas[in_ix].clone()).unwrap_or_default();
+                }
+            }
+        }
 
         // Get dimensions each frame.
         let dims = display.get_framebuffer_dimensions();
