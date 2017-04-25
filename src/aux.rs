@@ -84,6 +84,29 @@ pub fn generate_cells<R: Rng>(graph: &mut CellGraph, rng: &mut R) {
     }
 }
 
+pub fn divide_cell<R: Rng>(graph: &mut CellGraph, nix: NodeIndex<u32>, rng: &mut R) {
+    use petgraph::Direction::*;
+    use petgraph::visit::EdgeRef;
+    let new_energy = graph[nix].cell.energy() / 2;
+    graph[nix].cell.set_energy(new_energy);
+    let mut new_cell = graph[nix].cell.clone();
+    new_cell.mutate(rng);
+    new_cell.random_shift(rng);
+    let cc = CellContainer {
+        cell: graph[nix].cell.clone(),
+        delta: None,
+    };
+
+    let nnix = graph.add_node(cc);
+    graph.add_edge(nix, nnix, Default::default());
+    for edge_target in graph.edges_directed(nix, Outgoing).map(|e| e.target()).collect::<Vec<_>>() {
+        graph.add_edge(nnix, edge_target, Default::default());
+    }
+    for edge_source in graph.edges_directed(nix, Outgoing).map(|e| e.source()).collect::<Vec<_>>() {
+        graph.add_edge(edge_source, nnix, Default::default());
+    }
+}
+
 fn compute_connection_state(graph: &mut CellGraph,
                             source_position: Vector2<f64>,
                             direction: Direction,

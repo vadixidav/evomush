@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Geordon Worley <vadixidav@gmail.com>"]
 
 [dependencies]
-gapush = {git = "ssh://git@github.com/vadixidav/gapush.git", rev = "95792305c8546c000f2bb24624940a549aac01f4"}
+gapush = {git = "ssh://git@github.com/vadixidav/gapush.git", rev = "3cf7f57e3ba8e6d345415a5877f3401d02edd058"}
 rand = "0.3"
 heapsize = "0.3"
 serde = "0.9"

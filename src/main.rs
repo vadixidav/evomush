@@ -28,6 +28,8 @@ type CellGraph = petgraph::Graph<CellContainer, (cell::ConnectionDelta, cell::Co
 
 
 const SEED: [u64; 4] = [0, 1, 2, 3];
+const POSITION_SCALE: f32 = 0.01;
+const CRICLE_SCALE: f32 = 0.1;
 
 fn main() {
     use glium_sdl2::DisplayBuild;
@@ -67,7 +69,7 @@ fn main() {
             cc.delta = Some(cc.cell.cycle(state));
         }
 
-        // Update all edge elasticities.
+        // Update all edge deltas.
         for nix in graph.node_indices() {
             use petgraph::Direction::*;
 
@@ -85,9 +87,17 @@ fn main() {
         }
 
         // Handle death
+        // FIXME: Modifies graph!
         for nix in graph.node_indices() {
             if graph[nix].delta.as_ref().map(|d| d.die).unwrap_or(false) {
                 graph.remove_node(nix);
+            }
+        }
+
+        // Handle division
+        for nix in graph.node_indices() {
+            if graph[nix].delta.as_ref().map(|d| d.divide).unwrap_or(false) {
+                divide_cell(&mut graph, nix, &mut rng);
             }
         }
 
@@ -102,8 +112,20 @@ fn main() {
         // Draw circles.
         glowy.render_qbeziers_flat(&mut target,
                                    [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
-                                   [[hscale, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
-                                   &circle::make_circle([1.0, 0.0, 0.0, 1.0]).collect::<Vec<_>>());
+                                   [[hscale * CRICLE_SCALE, 0.0, 0.0], [0.0, CRICLE_SCALE, 0.0], [0.0, 0.0, CRICLE_SCALE]],
+                                   &graph.raw_nodes()
+                                         .iter()
+                                         .map(|n| n.weight.cell.position())
+                                         .flat_map(|p| circle::make_circle([1.0, 0.0, 0.0, 1.0]).map(move |mut qb| {
+                                             qb.position0[0] += p.x as f32 * POSITION_SCALE;
+                                             qb.position0[1] += p.y as f32 * POSITION_SCALE;
+                                             qb.position1[0] += p.x as f32 * POSITION_SCALE;
+                                             qb.position1[1] += p.y as f32 * POSITION_SCALE;
+                                             qb.position2[0] += p.x as f32 * POSITION_SCALE;
+                                             qb.position2[1] += p.y as f32 * POSITION_SCALE;
+                                             qb
+                                         }))
+                                         .collect::<Vec<_>>());
 
         // End draw.
         target.finish().unwrap();
