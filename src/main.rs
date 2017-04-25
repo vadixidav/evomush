@@ -75,27 +75,35 @@ fn main() {
 
             // Handle the outgoing connection deltas.
             {
-                let out_deltas = graph.node_weight(nix)
+                let out_deltas = graph
+                    .node_weight(nix)
                     .and_then(|container| container.delta.as_ref())
                     .map(|delta| delta.out_connections.clone());
                 let mut out_walker = graph.neighbors_directed(nix, Outgoing).detach();
                 let mut out_counter = 0..;
-                while let (Some(out_ix), Some(eix)) = (out_counter.next(), out_walker.next_edge(&graph)) {
-                    graph.edge_weight_mut(eix).unwrap().0 =
-                        out_deltas.as_ref().map(|deltas| deltas[out_ix].clone()).unwrap_or_default();
+                while let (Some(out_ix), Some(eix)) =
+                    (out_counter.next(), out_walker.next_edge(&graph)) {
+                    graph.edge_weight_mut(eix).unwrap().0 = out_deltas
+                        .as_ref()
+                        .map(|deltas| deltas[out_ix].clone())
+                        .unwrap_or_default();
                 }
             }
 
             // Handle the incoming connection deltas.
             {
-                let in_deltas = graph.node_weight(nix)
+                let in_deltas = graph
+                    .node_weight(nix)
                     .and_then(|container| container.delta.as_ref())
                     .map(|delta| delta.in_connections.clone());
                 let mut in_walker = graph.neighbors_directed(nix, Incoming).detach();
                 let mut in_counter = 0..;
-                while let (Some(in_ix), Some(eix)) = (in_counter.next(), in_walker.next_edge(&graph)) {
-                    graph.edge_weight_mut(eix).unwrap().1 =
-                        in_deltas.as_ref().map(|deltas| deltas[in_ix].clone()).unwrap_or_default();
+                while let (Some(in_ix), Some(eix)) =
+                    (in_counter.next(), in_walker.next_edge(&graph)) {
+                    graph.edge_weight_mut(eix).unwrap().1 = in_deltas
+                        .as_ref()
+                        .map(|deltas| deltas[in_ix].clone())
+                        .unwrap_or_default();
                 }
             }
         }
@@ -113,7 +121,7 @@ fn main() {
                                    [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                                    [[hscale, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
                                    &circle::make_circle([1.0, 0.0, 0.0, 1.0]).collect::<Vec<_>>());
-        
+
         // End draw.
         target.finish().unwrap();
 

@@ -22,7 +22,10 @@ const INERTIA: f64 = 1.0;
 const CELL_SPAWN_PROBABILITY: f64 = 0.01;
 
 pub fn area_box() -> zoom::Box<Vector2<f64>> {
-    zoom::Box{origin: Vector2::new(0.0, 0.0), offset: Vector2::new(500.0, 500.0)}
+    zoom::Box {
+        origin: Vector2::new(0.0, 0.0),
+        offset: Vector2::new(500.0, 500.0),
+    }
 }
 
 pub fn compute_hooke_coefficient(edge: (f64, f64)) -> f64 {
@@ -31,25 +34,29 @@ pub fn compute_hooke_coefficient(edge: (f64, f64)) -> f64 {
 
 pub fn random_point<R: Rng>(rng: &mut R) -> Vector2<f64> {
     let mut central_rand = || 2.0 * rng.next_f64() - 1.0;
-    area_box().origin + Vector2::new(area_box().offset.x * central_rand(), area_box().offset.y * central_rand())
+    area_box().origin +
+    Vector2::new(area_box().offset.x * central_rand(),
+                 area_box().offset.y * central_rand())
 }
 
 pub fn generate_cells<R: Rng>(graph: &mut CellGraph, rng: &mut R) {
     if rng.next_f64() < CELL_SPAWN_PROBABILITY {
-        let particle = BasicParticle::new(NEWTON_RESTING, random_point(rng), Vector2::zero(), INERTIA);
-        graph.add_node(CellContainer{
-            cell: Cell::new_rand(rng, particle),
-            delta: None,
-            prev_delta: None,
-        });
+        let particle =
+            BasicParticle::new(NEWTON_RESTING, random_point(rng), Vector2::zero(), INERTIA);
+        graph.add_node(CellContainer {
+                           cell: Cell::new_rand(rng, particle),
+                           delta: None,
+                           prev_delta: None,
+                       });
     }
 }
 
 fn compute_connection_state(graph: &mut CellGraph,
-    source_position: Vector2<f64>,
-    direction: Direction,
-    target_edge: EdgeIndex<u32>,
-    target_node: NodeIndex<u32>) -> ConnectionState {
+                            source_position: Vector2<f64>,
+                            direction: Direction,
+                            target_edge: EdgeIndex<u32>,
+                            target_node: NodeIndex<u32>)
+                            -> ConnectionState {
     use nalgebra::Norm;
     let sent = match (direction, graph.edge_weight(target_edge).unwrap()) {
         (Direction::Outgoing, e) => e.1.signal.clone(),
@@ -62,10 +69,10 @@ fn compute_connection_state(graph: &mut CellGraph,
     }
 }
 
-pub fn compute_connection_states(
-    graph: &mut CellGraph,
-    nix: NodeIndex<u32>,
-    direction: Direction) -> Vec<ConnectionState> {
+pub fn compute_connection_states(graph: &mut CellGraph,
+                                 nix: NodeIndex<u32>,
+                                 direction: Direction)
+                                 -> Vec<ConnectionState> {
     let pos = graph.node_weight(nix).unwrap().cell.position();
     let mut walker = graph.neighbors_directed(nix, direction).detach();
     let mut counter = 0..;

@@ -61,8 +61,8 @@ impl Genome {
                                                     CONNECTION_SIGNAL_LEN,
                                                     CONNECTION_SIGNAL_CROSSOVERS),
             connection_sever: Chromosome::new_rand(rng,
-                                                    CONNECTION_SEVER_LEN,
-                                                    CONNECTION_SEVER_CROSSOVERS),
+                                                   CONNECTION_SEVER_LEN,
+                                                   CONNECTION_SEVER_CROSSOVERS),
             repulsion: Chromosome::new_rand(rng, REPULSION_LEN, REPULSION_CROSSOVERS),
             die: Chromosome::new_rand(rng, DIE_LEN, DIE_CROSSOVERS),
             divide: Chromosome::new_rand(rng, DIVIDE_LEN, DIVIDE_CROSSOVERS),
@@ -169,46 +169,77 @@ impl Brain {
     /// Runs the cycle and returns the number of cycles executed.
     pub fn run_cycle(&mut self, energy: f64) -> usize {
         self.machine.state.push_float(energy).ok();
-        self.machine.provide_and_cycle_until(INIT_EXECUTION_TIME, (&self.genome.cycle).into()).1
+        self.machine
+            .provide_and_cycle_until(INIT_EXECUTION_TIME, (&self.genome.cycle).into())
+            .1
     }
 
     /// Runs the connection chromosomes. Gives back an i64 that corresponds to the desired elasticity and
     /// an instruction corresponding to the signal.
-    pub fn run_connection(&mut self, length: f64, ins: SimpleInstruction) ->
-            (Option<i64>, Option<SimpleInstruction>, Option<bool>, usize) {
+    pub fn run_connection(&mut self,
+                          length: f64,
+                          ins: SimpleInstruction)
+                          -> (Option<i64>, Option<SimpleInstruction>, Option<bool>, usize) {
         self.machine.state.push_float(length).ok();
         self.machine.state.push_ins(ins).ok();
-        let (elasticity, elen) = self.machine.provide_and_cycle_until(INIT_EXECUTION_TIME,
-                                (&self.genome.connection_elasticity).into());
-        let (signal, slen) = self.machine.provide_and_cycle_until(INIT_EXECUTION_TIME,
-                                (&self.genome.connection_signal).into());
-        let (sever, svlen) = self.machine.provide_and_cycle_until(INIT_EXECUTION_TIME,
-                                (&self.genome.connection_sever).into());
-        (   elasticity.and_then(|ins| match ins {SimpleInstruction::Pushi64(n) => Some(n), _ => None}),
-            signal,
-            sever.and_then(|ins| match ins {SimpleInstruction::Pushb(b) => Some(b), _ => None}),
-            elen + slen + svlen)
+        let (elasticity, elen) =
+            self.machine
+                .provide_and_cycle_until(INIT_EXECUTION_TIME,
+                                         (&self.genome.connection_elasticity).into());
+        let (signal, slen) =
+            self.machine
+                .provide_and_cycle_until(INIT_EXECUTION_TIME,
+                                         (&self.genome.connection_signal).into());
+        let (sever, svlen) =
+            self.machine
+                .provide_and_cycle_until(INIT_EXECUTION_TIME,
+                                         (&self.genome.connection_sever).into());
+        (elasticity.and_then(|ins| match ins {
+                                 SimpleInstruction::Pushi64(n) => Some(n),
+                                 _ => None,
+                             }),
+         signal,
+         sever.and_then(|ins| match ins {
+                            SimpleInstruction::Pushb(b) => Some(b),
+                            _ => None,
+                        }),
+         elen + slen + svlen)
     }
 
     /// Runs the repulsion chromosome. Gets an i64 back that indicates the desired repulsion.
     pub fn run_repulsion(&mut self) -> (Option<i64>, usize) {
-        let (repulsion, len) = self.machine.provide_and_cycle_until(INIT_EXECUTION_TIME,
-                                (&self.genome.repulsion).into());
-        (repulsion.and_then(|ins| match ins {SimpleInstruction::Pushi64(n) => Some(n), _ => None}), len)
+        let (repulsion, len) =
+            self.machine
+                .provide_and_cycle_until(INIT_EXECUTION_TIME, (&self.genome.repulsion).into());
+        (repulsion.and_then(|ins| match ins {
+                                SimpleInstruction::Pushi64(n) => Some(n),
+                                _ => None,
+                            }),
+         len)
     }
 
     /// Runs the die chromosome. Gets a bool back that indicates whether to die or not.
     pub fn run_die(&mut self) -> (Option<bool>, usize) {
-        let (die, len) = self.machine.provide_and_cycle_until(INIT_EXECUTION_TIME,
-                                (&self.genome.die).into());
-        (die.and_then(|ins| match ins {SimpleInstruction::Pushb(b) => Some(b), _ => None}), len)
+        let (die, len) =
+            self.machine
+                .provide_and_cycle_until(INIT_EXECUTION_TIME, (&self.genome.die).into());
+        (die.and_then(|ins| match ins {
+                          SimpleInstruction::Pushb(b) => Some(b),
+                          _ => None,
+                      }),
+         len)
     }
 
     /// Runs the divide chromosome. Gets a bool back that indicates whether to divide or not.
     pub fn run_divide(&mut self) -> (Option<bool>, usize) {
-        let (divide, len) = self.machine.provide_and_cycle_until(INIT_EXECUTION_TIME,
-                                (&self.genome.divide).into());
-        (divide.and_then(|ins| match ins {SimpleInstruction::Pushb(b) => Some(b), _ => None}), len)
+        let (divide, len) =
+            self.machine
+                .provide_and_cycle_until(INIT_EXECUTION_TIME, (&self.genome.divide).into());
+        (divide.and_then(|ins| match ins {
+                             SimpleInstruction::Pushb(b) => Some(b),
+                             _ => None,
+                         }),
+         len)
     }
 }
 

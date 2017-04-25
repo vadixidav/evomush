@@ -39,7 +39,10 @@ impl Cell {
         self.energy
     }
 
-    pub fn create_state(&self, out_connections: Vec<ConnectionState>, in_connections: Vec<ConnectionState>) -> StateParameters {
+    pub fn create_state(&self,
+                        out_connections: Vec<ConnectionState>,
+                        in_connections: Vec<ConnectionState>)
+                        -> StateParameters {
         StateParameters {
             position: self.particle.position,
             energy: self.energy,
@@ -48,42 +51,51 @@ impl Cell {
         }
     }
 
-    pub fn run_connection(&mut self, connection_states: Vec<ConnectionState>) -> (Vec<ConnectionDelta>, usize) {
-        connection_states.into_iter()
+    pub fn run_connection(&mut self,
+                          connection_states: Vec<ConnectionState>)
+                          -> (Vec<ConnectionDelta>, usize) {
+        connection_states
+            .into_iter()
             .map(|cs| self.brain.run_connection(cs.length, cs.incoming))
-            .map(|(elasticity, signal, sever, cycles)|
-                (cell_sigmoid(elasticity.unwrap_or(0)),
-                signal.unwrap_or(SimpleInstruction::PlainOp(PlainOp::Nop)),
-                sever.unwrap_or(false),
-                cycles))
-            .map(|(elasticity, signal, sever, cycles)| (ConnectionDelta{
-                elasticity: elasticity,
-                signal: signal,
-                sever: sever,
-            },
-            cycles))
-            .fold((Vec::new(), 0), |(mut v, tcycles), (delta, cycles)| {v.push(delta); (v, tcycles + cycles)})
+            .map(|(elasticity, signal, sever, cycles)| {
+                     (cell_sigmoid(elasticity.unwrap_or(0)),
+                      signal.unwrap_or(SimpleInstruction::PlainOp(PlainOp::Nop)),
+                      sever.unwrap_or(false),
+                      cycles)
+                 })
+            .map(|(elasticity, signal, sever, cycles)| {
+                     (ConnectionDelta {
+                          elasticity: elasticity,
+                          signal: signal,
+                          sever: sever,
+                      },
+                      cycles)
+                 })
+            .fold((Vec::new(), 0), |(mut v, tcycles), (delta, cycles)| {
+                v.push(delta);
+                (v, tcycles + cycles)
+            })
     }
 
     pub fn cycle(&mut self, state: StateParameters) -> Delta {
         let cycle_cycles = self.brain.run_cycle(state.energy as f64);
-        let (out_connection_deltas, out_connection_cycles) = self.run_connection(state.out_connections);
-        let (in_connection_deltas, in_connection_cycles) = self.run_connection(state.in_connections);
+        let (out_connection_deltas, out_connection_cycles) =
+            self.run_connection(state.out_connections);
+        let (in_connection_deltas, in_connection_cycles) =
+            self.run_connection(state.in_connections);
         let (repulsion, repulsion_cycles) = self.brain.run_repulsion();
         let repulsion = cell_sigmoid(repulsion.unwrap_or(0));
         let (die, die_cycles) = self.brain.run_die();
         let die = die.unwrap_or(false);
         let (divide, divide_cycles) = self.brain.run_divide();
         let divide = divide.unwrap_or(false);
-        self.energy = self.energy.checked_sub((ENERGY_TO_EXECUTION_RATIO *
-            (cycle_cycles +
-                out_connection_cycles +
-                in_connection_cycles +
-                repulsion_cycles +
-                die_cycles +
-                divide_cycles) as f64) as usize)
+        self.energy = self.energy
+            .checked_sub((ENERGY_TO_EXECUTION_RATIO *
+                          (cycle_cycles + out_connection_cycles + in_connection_cycles +
+                           repulsion_cycles + die_cycles +
+                           divide_cycles) as f64) as usize)
             .unwrap_or(0);
-        Delta{
+        Delta {
             out_connections: out_connection_deltas,
             in_connections: in_connection_deltas,
             repulsion: repulsion,

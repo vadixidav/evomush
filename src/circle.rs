@@ -3,7 +3,7 @@ use std::iter::once;
 
 const CIRCLE_BAND_RADIUS: f32 = 0.3;
 
-pub fn make_circle(color: [f32; 4]) -> impl Iterator<Item=QBezier> {
+pub fn make_circle(color: [f32; 4]) -> impl Iterator<Item = QBezier> {
     once(QBezier {
          position0: [0.0, -1.0],
          position1: [0.5773502691896256, -1.0],
