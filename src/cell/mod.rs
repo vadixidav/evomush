@@ -4,6 +4,8 @@ use zoom::*;
 use nalgebra as na;
 use rand::Rng;
 use gapush::simple::{SimpleInstruction, PlainOp};
+use aux::BallPoint;
+use zoom::particle;
 
 const INIT_ENERGY: usize = 1 << 20;
 const SIZE_TO_ENERGY_RATIO: f64 = 0.05;
@@ -12,6 +14,7 @@ const CELL_SIGMOID_COEFFICIENT: f64 = 0.01;
 
 const DRAG_COEFFICIENT: f64 = 0.001;
 const PHYSICS_DELTA: f64 = 1.0;
+const GRAVITATE_RADIUS: f64 = 0.1;
 
 pub struct Cell {
     energy: usize,
@@ -112,6 +115,14 @@ impl Cell {
 
     pub fn position(&self) -> na::Vector2<f64> {
         self.particle.position.clone()
+    }
+
+    pub fn interact_connection(&self, position: na::Vector2<f64>, hooke: f64) {
+        self.particle.hooke_to(&BallPoint::new(position), hooke);
+    }
+
+    pub fn interact_repel(&self, other: &Self, newton: f64) {
+        particle::gravitate_radius_squared(&self.particle, &other.particle, GRAVITATE_RADIUS * GRAVITATE_RADIUS, -newton);
     }
 }
 

@@ -2,20 +2,19 @@ use CellContainer;
 use rand::Rng;
 use cell::{Cell, ConnectionState};
 use CellGraph;
-use zoom::{self, BasicParticle, Toroid};
+use zoom::{self, BasicParticle, Position, Quanta};
 use nalgebra::Vector2;
 use num::Zero;
 use petgraph::graph::{NodeIndex, EdgeIndex};
 use petgraph::Direction;
+use itertools::Itertools;
 
 // Spring attraction force.
 const HOOKE_DYNAMIC: f64 = 0.1;
 const HOOKE_STATIC: f64 = 0.1;
-const HOOKE_RESTING: f64 = HOOKE_STATIC + 0.5 * HOOKE_DYNAMIC;
 // Gravitational repeling force.
 const NEWTON_DYNAMIC: f64 = 0.1;
 const NEWTON_STATIC: f64 = 0.1;
-const NEWTON_RESTING: f64 = NEWTON_STATIC + 0.5 * NEWTON_DYNAMIC;
 
 const INERTIA: f64 = 1.0;
 
@@ -29,7 +28,42 @@ pub fn area_box() -> zoom::Box<Vector2<f64>> {
 }
 
 pub fn compute_hooke_coefficient(edge: (f64, f64)) -> f64 {
-    HOOKE_STATIC + HOOKE_DYNAMIC * (edge.0 * edge.1).sqrt()
+    HOOKE_STATIC + HOOKE_DYNAMIC * (edge.0 + edge.1) * 0.5
+}
+
+pub fn compute_newton_coefficient(edge: (f64, f64)) -> f64 {
+    NEWTON_STATIC + NEWTON_DYNAMIC * (edge.0 + edge.1) * 0.5
+}
+
+fn map_node_to_mag(cc: &CellContainer) -> f64 {
+    cc.delta
+    .as_ref()
+    .map(|d| d.repulsion)
+    .unwrap_or(0.5)
+}
+
+pub fn cell_physics_interactions(graph: &mut CellGraph) {
+    for nix in graph.node_indices() {
+        let mut walker = graph.neighbors_undirected(nix).detach();
+        while let Some((eix, tnix)) = walker.next(&graph) {
+
+            let hooke_coefficient = compute_hooke_coefficient(
+                graph.edge_weight(eix)
+                .map(|&(ref d0, ref d1)| (d0.elasticity, d1.elasticity))
+                .unwrap());
+
+            let target_position = graph.node_weight(tnix).unwrap().cell.position();
+            let tcc = graph.node_weight(nix).unwrap();
+            tcc.cell.interact_connection(target_position, hooke_coefficient);
+        }
+    }
+
+    for nv in graph.raw_nodes().iter().combinations(2) {
+        nv[0].weight.cell.interact_repel(&nv[1].weight.cell, compute_newton_coefficient((
+            map_node_to_mag(&nv[0].weight),
+            map_node_to_mag(&nv[1].weight),
+        )));
+    }
 }
 
 pub fn random_point<R: Rng>(rng: &mut R) -> Vector2<f64> {
@@ -42,11 +76,10 @@ pub fn random_point<R: Rng>(rng: &mut R) -> Vector2<f64> {
 pub fn generate_cells<R: Rng>(graph: &mut CellGraph, rng: &mut R) {
     if rng.next_f64() < CELL_SPAWN_PROBABILITY {
         let particle =
-            BasicParticle::new(NEWTON_RESTING, random_point(rng), Vector2::zero(), INERTIA);
+            BasicParticle::new(1.0, random_point(rng), Vector2::zero(), INERTIA);
         graph.add_node(CellContainer {
                            cell: Cell::new_rand(rng, particle),
                            delta: None,
-                           prev_delta: None,
                        });
     }
 }
@@ -97,5 +130,30 @@ pub fn update_deltas(graph: &mut CellGraph, nix: NodeIndex<u32>, direction: Dire
             .as_ref()
             .map(|deltas| deltas[ix].clone())
             .unwrap_or_default();
+    }
+}
+
+/// Give Position, Ball, and Quanta
+pub struct BallPoint {
+    pub position: Vector2<f64>,
+}
+
+impl BallPoint {
+    pub fn new(position: Vector2<f64>) -> BallPoint {
+        BallPoint {
+            position: position,
+        }
+    }
+}
+
+impl Position<Vector2<f64>> for BallPoint {
+    fn position(&self) -> Vector2<f64> {
+        self.position
+    }
+}
+
+impl Quanta<f64> for BallPoint {
+    fn quanta(&self) -> f64 {
+        1.0
     }
 }

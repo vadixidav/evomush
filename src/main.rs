@@ -13,6 +13,7 @@ extern crate zoom;
 extern crate nalgebra;
 extern crate petgraph;
 extern crate num;
+extern crate itertools;
 
 mod circle;
 mod cell;
@@ -75,6 +76,14 @@ fn main() {
             update_deltas(&mut graph, nix, Incoming);
         }
 
+        // Handle cell physics interations.
+        cell_physics_interactions(&mut graph);
+
+        // Advance physics
+        for nix in graph.node_indices() {
+            graph[nix].cell.update_physics();
+        }
+
         // Get dimensions each frame.
         let dims = display.get_framebuffer_dimensions();
         let hscale = dims.1 as f32 / dims.0 as f32;
@@ -110,6 +119,4 @@ pub struct CellContainer {
     pub cell: cell::Cell,
     /// The current delta.
     pub delta: Option<cell::Delta>,
-    /// The previous delta.
-    pub prev_delta: Option<cell::Delta>,
 }
