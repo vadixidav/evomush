@@ -75,7 +75,6 @@ pub fn compute_connection_states(graph: &mut CellGraph,
                                  -> Vec<ConnectionState> {
     let pos = graph.node_weight(nix).unwrap().cell.position();
     let mut walker = graph.neighbors_directed(nix, direction).detach();
-    let mut counter = 0..;
     let mut states = Vec::new();
     while let Some((eix, tnix)) = walker.next(&graph) {
         states.push(compute_connection_state(graph, pos, direction, eix, tnix));
