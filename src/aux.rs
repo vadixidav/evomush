@@ -82,3 +82,21 @@ pub fn compute_connection_states(graph: &mut CellGraph,
     }
     states
 }
+
+pub fn update_deltas(graph: &mut CellGraph, nix: NodeIndex<u32>, direction: Direction) {
+    let deltas = graph
+        .node_weight(nix)
+        .and_then(|container| container.delta.as_ref())
+        .map(|delta| match direction {
+                 Direction::Outgoing => delta.out_connections.clone(),
+                 Direction::Incoming => delta.in_connections.clone(),
+             });
+    let mut walker = graph.neighbors_directed(nix, direction).detach();
+    let mut counter = 0..;
+    while let (Some(ix), Some(eix)) = (counter.next(), walker.next_edge(&graph)) {
+        graph.edge_weight_mut(eix).unwrap().0 = deltas
+            .as_ref()
+            .map(|deltas| deltas[ix].clone())
+            .unwrap_or_default();
+    }
+}
