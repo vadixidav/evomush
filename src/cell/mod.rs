@@ -97,6 +97,10 @@ impl Cell {
         self.particle.drag(DRAG_COEFFICIENT);
         self.particle.advance(PHYSICS_DELTA);
     }
+
+    pub fn position(&self) -> na::Vector2<f64> {
+        self.particle.position.clone()
+    }
 }
 
 #[derive(Clone, Debug)]

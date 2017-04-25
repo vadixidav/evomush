@@ -1,10 +1,12 @@
 use CellContainer;
 use rand::Rng;
-use cell::Cell;
+use cell::{Cell, ConnectionState};
 use CellGraph;
 use zoom::{self, BasicParticle, Toroid};
 use nalgebra::Vector2;
 use num::Zero;
+use petgraph::graph::{NodeIndex, EdgeIndex};
+use petgraph::Direction;
 
 // Spring attraction force.
 const HOOKE_DYNAMIC: f64 = 0.1;
@@ -41,4 +43,35 @@ pub fn generate_cells<R: Rng>(graph: &mut CellGraph, rng: &mut R) {
             prev_delta: None,
         });
     }
+}
+
+fn compute_connection_state(graph: &mut CellGraph,
+    source_position: Vector2<f64>,
+    direction: Direction,
+    target_edge: EdgeIndex<u32>,
+    target_node: NodeIndex<u32>) -> ConnectionState {
+    use nalgebra::Norm;
+    let sent = match (direction, graph.edge_weight(target_edge).unwrap()) {
+        (Direction::Outgoing, e) => e.1.signal.clone(),
+        (Direction::Incoming, e) => e.0.signal.clone(),
+    };
+    let length = (graph.node_weight(target_node).unwrap().cell.position() - source_position).norm();
+    ConnectionState {
+        incoming: sent,
+        length: length,
+    }
+}
+
+pub fn compute_connection_states(
+    graph: &mut CellGraph,
+    nix: NodeIndex<u32>,
+    direction: Direction) -> Vec<ConnectionState> {
+    let pos = graph.node_weight(nix).unwrap().cell.position();
+    let mut walker = graph.neighbors_directed(nix, direction).detach();
+    let mut counter = 0..;
+    let mut states = Vec::new();
+    while let Some((eix, tnix)) = walker.next(&graph) {
+        states.push(compute_connection_state(graph, pos, direction, eix, tnix));
+    }
+    states
 }

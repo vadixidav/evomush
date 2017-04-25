@@ -56,6 +56,18 @@ fn main() {
         // Generate cells randomly.
         generate_cells(&mut graph, &mut rng);
 
+        // Compute cell deltas.
+        for nix in graph.node_indices() {
+            use petgraph::Direction::*;
+
+            let out_states = compute_connection_states(&mut graph, nix, Outgoing);
+            let in_states = compute_connection_states(&mut graph, nix, Incoming);
+
+            let cc = graph.node_weight_mut(nix).unwrap();
+            let state = cc.cell.create_state(out_states, in_states);
+            cc.delta = Some(cc.cell.cycle(state));
+        }
+
         // TODO: Separate the bodies in this into functions.
         // Update all edge elasticities.
         for nix in graph.node_indices() {
