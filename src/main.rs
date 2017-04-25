@@ -43,14 +43,12 @@ fn main() {
         .build_glium()
         .unwrap();
     let glowy = Renderer::new(&display);
-
-    let mut running = true;
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut graph = CellGraph::new();
     let mut rng = rand::Isaac64Rng::from_seed(&SEED);
 
-    while running {
+    loop {
         use glium::Surface;
 
         // Generate cells randomly.
@@ -100,7 +98,7 @@ fn main() {
 
             match event {
                 Event::Quit { .. } => {
-                    running = false;
+                    return;
                 }
                 _ => (),
             }
