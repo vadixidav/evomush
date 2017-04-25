@@ -84,6 +84,13 @@ fn main() {
             graph[nix].cell.update_physics();
         }
 
+        // Handle death
+        for nix in graph.node_indices() {
+            if graph[nix].delta.as_ref().map(|d| d.die).unwrap_or(false) {
+                graph.remove_node(nix);
+            }
+        }
+
         // Get dimensions each frame.
         let dims = display.get_framebuffer_dimensions();
         let hscale = dims.1 as f32 / dims.0 as f32;
