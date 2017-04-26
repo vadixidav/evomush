@@ -14,9 +14,9 @@ const CELL_SIGMOID_COEFFICIENT: f64 = 0.01;
 
 const DRAG_COEFFICIENT: f64 = 0.001;
 const PHYSICS_DELTA: f64 = 50.0;
-const GRAVITATE_RADIUS: f64 = 0.1;
+const GRAVITATE_RADIUS: f64 = 0.0001;
 
-const RANDOM_SHIFT_OFFSET: f64 = 0.1;
+const RANDOM_SHIFT_OFFSET: f64 = 0.2;
 
 #[derive(Clone)]
 pub struct Cell {
@@ -116,7 +116,7 @@ impl Cell {
     }
 
     pub fn random_shift<R: Rng>(&mut self, rng: &mut R) {
-        let mut central_rand = || RANDOM_SHIFT_OFFSET * 2.0 * rng.next_f64() - 1.0;
+        let mut central_rand = || RANDOM_SHIFT_OFFSET * (2.0 * rng.next_f64() - 1.0);
         self.particle.position += na::Vector2::new(central_rand(), central_rand());
     }
 

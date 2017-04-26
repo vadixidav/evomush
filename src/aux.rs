@@ -10,8 +10,8 @@ use petgraph::Direction;
 use itertools::Itertools;
 
 // Spring attraction force.
-const HOOKE_DYNAMIC: f64 = 0.1;
-const HOOKE_STATIC: f64 = 0.1;
+const HOOKE_DYNAMIC: f64 = 0.01;
+const HOOKE_STATIC: f64 = 0.01;
 // Gravitational repeling force.
 const NEWTON_DYNAMIC: f64 = 0.1;
 const NEWTON_STATIC: f64 = 0.1;
