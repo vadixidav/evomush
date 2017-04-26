@@ -4,7 +4,7 @@ use zoom::*;
 use nalgebra as na;
 use rand::Rng;
 use gapush::simple::{SimpleInstruction, PlainOp};
-use aux::{BallPoint, area_box};
+use aux::area_box;
 use zoom::particle;
 
 const INIT_ENERGY: usize = 1 << 20;

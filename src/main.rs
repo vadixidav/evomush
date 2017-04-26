@@ -14,6 +14,7 @@ extern crate nalgebra;
 extern crate petgraph;
 extern crate num;
 extern crate itertools;
+extern crate boolinator;
 
 mod circle;
 mod cell;
@@ -21,15 +22,16 @@ mod aux;
 
 use aux::*;
 use gg::render2::*;
+use boolinator::Boolinator;
 
 /// Create the graph which is used to store the cells and all their connections.
 /// The cell it goes out from is the first weight and vice versa.
 type CellGraph = petgraph::Graph<CellContainer, (cell::ConnectionDelta, cell::ConnectionDelta)>;
 
-
 const SEED: [u64; 4] = [0, 1, 2, 3];
-const POSITION_SCALE: f32 = 0.01;
-const CRICLE_SCALE: f32 = 0.1;
+const CRICLE_SCALE: f32 = 0.03;
+const POSITION_SCALE: f32 = 0.001 / CRICLE_SCALE;
+const SEPARATION_THRESHOLD: f64 = 0.1;
 
 fn main() {
     use glium_sdl2::DisplayBuild;
@@ -101,10 +103,19 @@ fn main() {
             }
         }
 
+        for eix in graph.edge_references().filter_map(|er| {
+            use petgraph::visit::EdgeRef;
+            use nalgebra::Norm;
+            let distance = (graph[er.source()].cell.position() - graph[er.target()].cell.position()).norm_squared();
+            (distance > SEPARATION_THRESHOLD * SEPARATION_THRESHOLD).as_some(er.id())
+        }).collect::<Vec<_>>() {
+            graph.remove_edge(eix);
+        }
+
         // Give everybody food based on connections just cuz.
         for nix in graph.node_indices().rev() {
             let count = graph.edges(nix).count();
-            let new_energy = graph[nix].cell.energy() + count * 1000;
+            let new_energy = graph[nix].cell.energy() + count * (1 << 15);
             graph[nix].cell.set_energy(new_energy);
         }
 

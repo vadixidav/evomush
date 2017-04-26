@@ -2,7 +2,7 @@ use CellContainer;
 use rand::Rng;
 use cell::{Cell, ConnectionState};
 use CellGraph;
-use zoom::{self, BasicParticle, Position, Quanta};
+use zoom::{self, BasicParticle};
 use nalgebra::Vector2;
 use num::Zero;
 use petgraph::graph::{NodeIndex, EdgeIndex};
@@ -152,30 +152,5 @@ pub fn update_deltas(graph: &mut CellGraph, nix: NodeIndex<u32>, direction: Dire
             .as_ref()
             .map(|deltas| deltas[ix].clone())
             .unwrap_or_default();
-    }
-}
-
-/// Give Position, Ball, and Quanta
-pub struct BallPoint {
-    pub position: Vector2<f64>,
-}
-
-impl BallPoint {
-    pub fn new(position: Vector2<f64>) -> BallPoint {
-        BallPoint {
-            position: position,
-        }
-    }
-}
-
-impl Position<Vector2<f64>> for BallPoint {
-    fn position(&self) -> Vector2<f64> {
-        self.position
-    }
-}
-
-impl Quanta<f64> for BallPoint {
-    fn quanta(&self) -> f64 {
-        1.0
     }
 }
