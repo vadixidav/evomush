@@ -18,7 +18,7 @@ const NEWTON_STATIC: f64 = 0.1;
 
 const INERTIA: f64 = 1.0;
 
-const CELL_SPAWN_PROBABILITY: f64 = 0.01;
+const CELL_SPAWN_PROBABILITY: f64 = 0.1;
 
 pub fn area_box() -> zoom::Box<Vector2<f64>> {
     zoom::Box {
@@ -92,7 +92,7 @@ pub fn divide_cell<R: Rng>(graph: &mut CellGraph, nix: NodeIndex<u32>, rng: &mut
     new_cell.mutate(rng);
     new_cell.random_shift(rng);
     let cc = CellContainer {
-        cell: graph[nix].cell.clone(),
+        cell: new_cell,
         delta: None,
     };
 

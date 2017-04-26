@@ -14,9 +14,9 @@ const CELL_SIGMOID_COEFFICIENT: f64 = 0.01;
 
 const DRAG_COEFFICIENT: f64 = 0.001;
 const PHYSICS_DELTA: f64 = 50.0;
-const GRAVITATE_RADIUS: f64 = 0.0001;
+const GRAVITATE_RADIUS: f64 = 0.00001;
 
-const RANDOM_SHIFT_OFFSET: f64 = 0.2;
+const RANDOM_SHIFT_OFFSET: f64 = 200.0;
 
 #[derive(Clone)]
 pub struct Cell {
