@@ -52,9 +52,8 @@ pub fn cell_physics_interactions(graph: &mut CellGraph) {
                 .map(|&(ref d0, ref d1)| (d0.elasticity, d1.elasticity))
                 .unwrap());
 
-            let target_position = graph.node_weight(tnix).unwrap().cell.position();
             let tcc = graph.node_weight(nix).unwrap();
-            tcc.cell.interact_connection(target_position, hooke_coefficient);
+            tcc.cell.interact_connection(&graph.node_weight(tnix).unwrap().cell, hooke_coefficient);
         }
     }
 

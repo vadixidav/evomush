@@ -86,19 +86,26 @@ fn main() {
             graph[nix].cell.update_physics();
         }
 
+        // Handle division
+        for nix in graph.node_indices().rev() {
+            if graph[nix].delta.as_ref().map(|d| d.divide).unwrap_or(false) {
+                divide_cell(&mut graph, nix, &mut rng);
+            }
+        }
+
         // Handle death
         // FIXME: Modifies graph!
-        for nix in graph.node_indices() {
+        for nix in graph.node_indices().rev() {
             if graph[nix].delta.as_ref().map(|d| d.die).unwrap_or(false) {
                 graph.remove_node(nix);
             }
         }
 
-        // Handle division
-        for nix in graph.node_indices() {
-            if graph[nix].delta.as_ref().map(|d| d.divide).unwrap_or(false) {
-                divide_cell(&mut graph, nix, &mut rng);
-            }
+        // Give everybody food based on connections just cuz.
+        for nix in graph.node_indices().rev() {
+            let count = graph.edges(nix).count();
+            let new_energy = graph[nix].cell.energy() + count * 1000;
+            graph[nix].cell.set_energy(new_energy);
         }
 
         // Get dimensions each frame.

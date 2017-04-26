@@ -4,7 +4,7 @@ use zoom::*;
 use nalgebra as na;
 use rand::Rng;
 use gapush::simple::{SimpleInstruction, PlainOp};
-use aux::BallPoint;
+use aux::{BallPoint, area_box};
 use zoom::particle;
 
 const INIT_ENERGY: usize = 1 << 20;
@@ -123,18 +123,22 @@ impl Cell {
     pub fn update_physics(&mut self) {
         self.particle.drag(DRAG_COEFFICIENT);
         self.particle.advance(PHYSICS_DELTA);
+        self.particle.position = area_box().wrap_position(self.particle.position);
     }
 
     pub fn position(&self) -> na::Vector2<f64> {
         self.particle.position.clone()
     }
 
-    pub fn interact_connection(&self, position: na::Vector2<f64>, hooke: f64) {
-        self.particle.hooke_to(&BallPoint::new(position), hooke);
+    pub fn interact_connection(&self, other: &Self, hooke: f64) {
+        particle::hooke_delta(&self.particle, &other.particle, hooke, |(from, to)| area_box().wrap_delta(to - from));
     }
 
     pub fn interact_repel(&self, other: &Self, newton: f64) {
-        particle::gravitate_radius_squared(&self.particle, &other.particle, GRAVITATE_RADIUS * GRAVITATE_RADIUS, -newton);
+        particle::gravitate_radius_squared_delta(&self.particle, &other.particle,
+                GRAVITATE_RADIUS * GRAVITATE_RADIUS,
+                -newton,
+                |(from, to)| area_box().wrap_delta(to - from));
     }
 }
 
