@@ -23,15 +23,15 @@ mod aux;
 use aux::*;
 use gg::render2::*;
 use boolinator::Boolinator;
+use std::iter::once;
+use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 
 /// Create the graph which is used to store the cells and all their connections.
 /// The cell it goes out from is the first weight and vice versa.
-type CellGraph = petgraph::Graph<CellContainer, (cell::ConnectionDelta, cell::ConnectionDelta)>;
+type CellGraph = petgraph::stable_graph::StableGraph<CellContainer, (cell::ConnectionDelta, cell::ConnectionDelta)>;
 
 const SEED: [u64; 4] = [0, 1, 2, 3];
-const CRICLE_SCALE: f32 = 0.03;
-const POSITION_SCALE: f32 = 0.001 / CRICLE_SCALE;
-const SEPARATION_THRESHOLD: f64 = 0.1;
+const CIRCLE_SCALE: f32 = 0.05;
 
 fn main() {
     use glium_sdl2::DisplayBuild;
@@ -43,7 +43,7 @@ fn main() {
     gl_subsystem.set_context_minor_version(1);
 
     let display = video_subsystem
-        .window("My window", 800, 600)
+        .window("My window", area_box().offset.x as u32 * 2, area_box().offset.y as u32 * 2)
         .resizable()
         .build_glium()
         .unwrap();
@@ -60,7 +60,7 @@ fn main() {
         generate_cells(&mut graph, &mut rng);
 
         // Compute cell deltas.
-        for nix in graph.node_indices() {
+        for nix in graph.node_indices().collect::<Vec<_>>() {
             use petgraph::Direction::*;
 
             let out_states = compute_connection_states(&mut graph, nix, Outgoing);
@@ -72,7 +72,7 @@ fn main() {
         }
 
         // Update all edge deltas.
-        for nix in graph.node_indices() {
+        for nix in graph.node_indices().collect::<Vec<_>>() {
             use petgraph::Direction::*;
 
             // Handle the connection deltas.
@@ -84,20 +84,19 @@ fn main() {
         cell_physics_interactions(&mut graph);
 
         // Advance physics
-        for nix in graph.node_indices() {
+        for nix in graph.node_indices().collect::<Vec<_>>() {
             graph[nix].cell.update_physics();
         }
 
         // Handle division
-        for nix in graph.node_indices().rev() {
+        for nix in graph.node_indices().collect::<Vec<_>>() {
             if graph[nix].delta.as_ref().map(|d| d.divide).unwrap_or(false) {
                 divide_cell(&mut graph, nix, &mut rng);
             }
         }
 
         // Handle death
-        // FIXME: Modifies graph!
-        for nix in graph.node_indices().rev() {
+        for nix in graph.node_indices().collect::<Vec<_>>() {
             if graph[nix].delta.as_ref().map(|d| d.die).unwrap_or(false) {
                 graph.remove_node(nix);
             }
@@ -105,15 +104,13 @@ fn main() {
 
         for eix in graph.edge_references().filter_map(|er| {
             use petgraph::visit::EdgeRef;
-            use nalgebra::Norm;
-            let distance = (graph[er.source()].cell.position() - graph[er.target()].cell.position()).norm_squared();
-            (distance > SEPARATION_THRESHOLD * SEPARATION_THRESHOLD).as_some(er.id())
+            (er.weight().0.sever || er.weight().0.sever).as_some(er.id())
         }).collect::<Vec<_>>() {
             graph.remove_edge(eix);
         }
 
         // Give everybody food based on connections just cuz.
-        for nix in graph.node_indices().rev() {
+        for nix in graph.node_indices().collect::<Vec<_>>() {
             let count = graph.edges(nix).count();
             let new_energy = graph[nix].cell.energy() + count * (1 << 15);
             graph[nix].cell.set_energy(new_energy);
@@ -129,20 +126,56 @@ fn main() {
         target.clear_color(0.0, 0.0, 0.0, 1.0);
         // Draw circles.
         glowy.render_qbeziers_flat(&mut target,
-                                   [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
-                                   [[hscale * CRICLE_SCALE, 0.0, 0.0], [0.0, CRICLE_SCALE, 0.0], [0.0, 0.0, CRICLE_SCALE]],
-                                   &graph.raw_nodes()
-                                         .iter()
-                                         .map(|n| n.weight.cell.position())
-                                         .flat_map(|p| circle::make_circle([1.0, 0.0, 0.0, 1.0]).map(move |mut qb| {
-                                             qb.position0[0] += p.x as f32 * POSITION_SCALE;
-                                             qb.position0[1] += p.y as f32 * POSITION_SCALE;
-                                             qb.position1[0] += p.x as f32 * POSITION_SCALE;
-                                             qb.position1[1] += p.y as f32 * POSITION_SCALE;
-                                             qb.position2[0] += p.x as f32 * POSITION_SCALE;
-                                             qb.position2[1] += p.y as f32 * POSITION_SCALE;
+                                   [[1.0, 0.0, 0.0],
+                                   [0.0, 1.0, 0.0],
+                                   [0.0, 0.0, 1.0]],
+                                   [[hscale / area_box().offset.x as f32, 0.0, 0.0],
+                                    [0.0, 1.0 / area_box().offset.y as f32, 0.0],
+                                        [0.0, 0.0, 1.0]],
+                                   &graph.node_indices()
+                                         .map(|nix| graph[nix].cell.position())
+                                         .flat_map(|p| circle::make_circle([0.0, 1.0, 1.0, 1.0]).map(move |mut qb| {
+                                             qb.falloff_radius0 *= CIRCLE_SCALE * area_box().offset.y as f32;
+                                             qb.falloff_radius1 *= CIRCLE_SCALE * area_box().offset.y as f32;
+
+                                             qb.position0[0] *= CIRCLE_SCALE * area_box().offset.x as f32;
+                                             qb.position0[0] += p.x as f32;
+                                             qb.position0[1] *= CIRCLE_SCALE * area_box().offset.y as f32;
+                                             qb.position0[1] += p.y as f32;
+                                             qb.position1[0] *= CIRCLE_SCALE * area_box().offset.x as f32;
+                                             qb.position1[0] += p.x as f32;
+                                             qb.position1[1] *= CIRCLE_SCALE * area_box().offset.y as f32;
+                                             qb.position1[1] += p.y as f32;
+                                             qb.position2[0] *= CIRCLE_SCALE * area_box().offset.x as f32;
+                                             qb.position2[0] += p.x as f32;
+                                             qb.position2[1] *= CIRCLE_SCALE * area_box().offset.y as f32;
+                                             qb.position2[1] += p.y as f32;
                                              qb
                                          }))
+                                         .collect::<Vec<_>>());
+        // Draw edges.
+        glowy.render_edges_round(&mut target,
+                                   [[1.0, 0.0, 0.0],
+                                   [0.0, 1.0, 0.0],
+                                   [0.0, 0.0, 1.0]],
+                                   [[hscale / area_box().offset.x as f32, 0.0, 0.0],
+                                    [0.0, 1.0 / area_box().offset.y as f32, 0.0],
+                                        [0.0, 0.0, 1.0]],
+                                   &graph.edge_references()
+                                         .map(|er| (graph[er.source()].cell.position(), graph[er.target()].cell.position()))
+                                         .flat_map(|(p0, p1)| once(Node{position: [p0.x as f32, p0.y as f32],
+                                            inner_color: [0.0, 0.0, 0.0, 1.0],
+                                            falloff: 0.25,
+                                            falloff_color: [0.0, 1.0, 0.0, 1.0],
+                                            falloff_radius: CIRCLE_SCALE * area_box().offset.y as f32,
+                                            inner_radius: 0.0}).chain(once(
+                                                Node{position: [p1.x as f32, p1.y as f32],
+                                            inner_color: [0.0, 0.0, 0.0, 1.0],
+                                            falloff: 0.25,
+                                            falloff_color: [0.0, 1.0, 0.0, 1.0],
+                                            falloff_radius: CIRCLE_SCALE * area_box().offset.y as f32,
+                                            inner_radius: 0.0}
+                                            )))
                                          .collect::<Vec<_>>());
 
         // End draw.

@@ -11,12 +11,14 @@ const INIT_ENERGY: usize = 1 << 20;
 const SIZE_TO_ENERGY_RATIO: f64 = 0.05;
 const ENERGY_TO_EXECUTION_RATIO: f64 = 20.0;
 const CELL_SIGMOID_COEFFICIENT: f64 = 0.01;
+const STATIC_ENERGY_CONSUMPTION: usize = 1 << 9;
 
 const DRAG_COEFFICIENT: f64 = 0.001;
-const PHYSICS_DELTA: f64 = 50.0;
+const PHYSICS_DELTA: f64 = 0.1;
 const GRAVITATE_RADIUS: f64 = 0.00001;
 
 const RANDOM_SHIFT_OFFSET: f64 = 200.0;
+const SEPARATION_THRESHOLD: f64 = 50.0;
 
 #[derive(Clone)]
 pub struct Cell {
@@ -62,11 +64,11 @@ impl Cell {
                           -> (Vec<ConnectionDelta>, usize) {
         connection_states
             .into_iter()
-            .map(|cs| self.brain.run_connection(cs.length, cs.incoming))
-            .map(|(elasticity, signal, sever, cycles)| {
+            .map(|cs| (cs.length, self.brain.run_connection(cs.length, cs.incoming)))
+            .map(|(length, (elasticity, signal, sever, cycles))| {
                      (cell_sigmoid(elasticity.unwrap_or(0)),
                       signal.unwrap_or(SimpleInstruction::PlainOp(PlainOp::Nop)),
-                      sever.unwrap_or(false),
+                      sever.unwrap_or(false) && length > SEPARATION_THRESHOLD,
                       cycles)
                  })
             .map(|(elasticity, signal, sever, cycles)| {
@@ -96,7 +98,7 @@ impl Cell {
         let (divide, divide_cycles) = self.brain.run_divide();
         let divide = divide.unwrap_or(false);
         self.energy = self.energy
-            .checked_sub((ENERGY_TO_EXECUTION_RATIO *
+            .checked_sub(STATIC_ENERGY_CONSUMPTION + (ENERGY_TO_EXECUTION_RATIO *
                           (cycle_cycles + out_connection_cycles + in_connection_cycles +
                            repulsion_cycles + die_cycles +
                            divide_cycles) as f64) as usize)

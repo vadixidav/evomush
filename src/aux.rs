@@ -5,25 +5,26 @@ use CellGraph;
 use zoom::{self, BasicParticle};
 use nalgebra::Vector2;
 use num::Zero;
-use petgraph::graph::{NodeIndex, EdgeIndex};
+use petgraph::stable_graph::{NodeIndex, EdgeIndex};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 use petgraph::Direction;
 use itertools::Itertools;
 
 // Spring attraction force.
-const HOOKE_DYNAMIC: f64 = 0.01;
-const HOOKE_STATIC: f64 = 0.01;
+const HOOKE_DYNAMIC: f64 = 0.00001;
+const HOOKE_STATIC: f64 = 0.00001;
 // Gravitational repeling force.
 const NEWTON_DYNAMIC: f64 = 0.1;
 const NEWTON_STATIC: f64 = 0.1;
 
 const INERTIA: f64 = 1.0;
 
-const CELL_SPAWN_PROBABILITY: f64 = 0.1;
+const CELL_SPAWN_PROBABILITY: f64 = 0.001;
 
 pub fn area_box() -> zoom::Box<Vector2<f64>> {
     zoom::Box {
         origin: Vector2::new(0.0, 0.0),
-        offset: Vector2::new(500.0, 500.0),
+        offset: Vector2::new(2000.0, 2000.0),
     }
 }
 
@@ -36,10 +37,7 @@ pub fn compute_newton_coefficient(edge: (f64, f64)) -> f64 {
 }
 
 fn map_node_to_mag(cc: &CellContainer) -> f64 {
-    cc.delta
-    .as_ref()
-    .map(|d| d.repulsion)
-    .unwrap_or(0.5)
+    cc.delta.as_ref().map(|d| d.repulsion).unwrap_or(0.5)
 }
 
 pub fn cell_physics_interactions(graph: &mut CellGraph) {
@@ -47,21 +45,28 @@ pub fn cell_physics_interactions(graph: &mut CellGraph) {
         let mut walker = graph.neighbors_undirected(nix).detach();
         while let Some((eix, tnix)) = walker.next(&graph) {
 
-            let hooke_coefficient = compute_hooke_coefficient(
-                graph.edge_weight(eix)
-                .map(|&(ref d0, ref d1)| (d0.elasticity, d1.elasticity))
-                .unwrap());
+            let hooke_coefficient = compute_hooke_coefficient(graph
+                                                                  .edge_weight(eix)
+                                                                  .map(|&(ref d0, ref d1)| {
+                                                                           (d0.elasticity,
+                                                                            d1.elasticity)
+                                                                       })
+                                                                  .unwrap());
 
             let tcc = graph.node_weight(nix).unwrap();
-            tcc.cell.interact_connection(&graph.node_weight(tnix).unwrap().cell, hooke_coefficient);
+            tcc.cell
+                .interact_connection(&graph.node_weight(tnix).unwrap().cell, hooke_coefficient);
         }
     }
 
-    for nv in graph.raw_nodes().iter().combinations(2) {
-        nv[0].weight.cell.interact_repel(&nv[1].weight.cell, compute_newton_coefficient((
-            map_node_to_mag(&nv[0].weight),
-            map_node_to_mag(&nv[1].weight),
-        )));
+    for nv in graph.edge_references().combinations(2) {
+        graph[nv[0].source()]
+            .cell
+            .interact_repel(&graph[nv[1].source()].cell,
+                            compute_newton_coefficient((map_node_to_mag(&graph
+                                                                            [nv[0].source()]),
+                                                        map_node_to_mag(&graph
+                                                                            [nv[1].source()]))));
     }
 }
 
@@ -74,8 +79,7 @@ pub fn random_point<R: Rng>(rng: &mut R) -> Vector2<f64> {
 
 pub fn generate_cells<R: Rng>(graph: &mut CellGraph, rng: &mut R) {
     if rng.next_f64() < CELL_SPAWN_PROBABILITY {
-        let particle =
-            BasicParticle::new(1.0, random_point(rng), Vector2::zero(), INERTIA);
+        let particle = BasicParticle::new(1.0, random_point(rng), Vector2::zero(), INERTIA);
         graph.add_node(CellContainer {
                            cell: Cell::new_rand(rng, particle),
                            delta: None,
@@ -98,10 +102,16 @@ pub fn divide_cell<R: Rng>(graph: &mut CellGraph, nix: NodeIndex<u32>, rng: &mut
 
     let nnix = graph.add_node(cc);
     graph.add_edge(nix, nnix, Default::default());
-    for edge_target in graph.edges_directed(nix, Outgoing).map(|e| e.target()).collect::<Vec<_>>() {
+    for edge_target in graph
+            .edges_directed(nix, Outgoing)
+            .map(|e| e.target())
+            .collect::<Vec<_>>() {
         graph.add_edge(nnix, edge_target, Default::default());
     }
-    for edge_source in graph.edges_directed(nix, Outgoing).map(|e| e.source()).collect::<Vec<_>>() {
+    for edge_source in graph
+            .edges_directed(nix, Outgoing)
+            .map(|e| e.source())
+            .collect::<Vec<_>>() {
         graph.add_edge(edge_source, nnix, Default::default());
     }
 }
@@ -154,3 +164,4 @@ pub fn update_deltas(graph: &mut CellGraph, nix: NodeIndex<u32>, direction: Dire
             .unwrap_or_default();
     }
 }
+
