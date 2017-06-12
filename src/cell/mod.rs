@@ -8,7 +8,7 @@ use auxillary::area_box;
 use zoom::particle;
 use std::cell;
 
-const INIT_ENERGY: usize = 1 << 16;
+const INIT_ENERGY: usize = 1 << 20;
 const SIZE_TO_ENERGY_RATIO: f64 = 0.05;
 const CONSUMPTION_TO_EXECUTION_RATIO: f64 = 20.0;
 const CONSUMPTION_TO_SIZE_RATIO: f64 = 0.02;

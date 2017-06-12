@@ -18,7 +18,7 @@ const NEWTON_STATIC: f64 = 10000.0;
 
 const INERTIA: f64 = 1.0;
 
-const CELL_SPAWN_PROBABILITY: f64 = 0.05;
+const CELL_SPAWN_PROBABILITY: f64 = 0.6;
 
 pub fn area_box() -> zoom::Box<Vector2<f64>> {
     zoom::Box {
