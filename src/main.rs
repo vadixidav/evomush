@@ -173,13 +173,13 @@ fn main() {
                                          .flat_map(|(p0, p1)| once(Node{position: [p0.x as f32, p0.y as f32],
                                             inner_color: [0.0, 0.0, 0.0, 1.0],
                                             falloff: 0.2,
-                                            falloff_color: [0.0, 0.2, 0.0, 1.0],
+                                            falloff_color: [0.0, 0.35, 0.0, 1.0],
                                             falloff_radius: CIRCLE_SCALE * area_box().offset.y as f32,
                                             inner_radius: 0.0}).chain(once(
                                                 Node{position: [p1.x as f32, p1.y as f32],
                                             inner_color: [0.0, 0.0, 0.0, 1.0],
                                             falloff: 0.2,
-                                            falloff_color: [0.0, 0.2, 0.0, 1.0],
+                                            falloff_color: [0.0, 0.35, 0.0, 1.0],
                                             falloff_radius: CIRCLE_SCALE * area_box().offset.y as f32,
                                             inner_radius: 0.0}
                                             )))
