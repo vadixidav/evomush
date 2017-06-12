@@ -25,6 +25,7 @@ use gg::render2::*;
 use boolinator::Boolinator;
 use std::iter::once;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
+use nalgebra::Norm;
 
 /// Create the graph which is used to store the cells and all their connections.
 /// The cell it goes out from is the first weight and vice versa.
@@ -32,6 +33,8 @@ type CellGraph = petgraph::stable_graph::StableGraph<CellContainer, (cell::Conne
 
 const SEED: [u64; 4] = [0, 1, 2, 3];
 const CIRCLE_SCALE: f32 = 0.01;
+const DYNAMIC_ENERGY_GAIN_COEFFICIENT: f64 = 40.0;
+const RENDER_LENGTH_LIMIT: f64 = 300.0;
 
 fn main() {
     use glium_sdl2::DisplayBuild;
@@ -108,10 +111,14 @@ fn main() {
             graph.remove_edge(eix);
         }
 
-        // Give everybody food based on connections just cuz.
+        // Give everybody food based on closest distance squared.
         for nix in graph.node_indices().collect::<Vec<_>>() {
-            let count = graph.edges(nix).count();
-            let new_energy = graph[nix].cell.energy() + count * (1 << 15);
+            let add_energy = graph[nix]
+                    .cell
+                    .closest_distance_squared()
+                    .map(|d| (d * DYNAMIC_ENERGY_GAIN_COEFFICIENT) as usize)
+                    .unwrap_or(0);
+            let new_energy = graph[nix].cell.energy() + add_energy;
             graph[nix].cell.set_energy(new_energy);
         }
 
@@ -162,6 +169,7 @@ fn main() {
                                         [0.0, 0.0, 1.0]],
                                    &graph.edge_references()
                                          .map(|er| (graph[er.source()].cell.position(), graph[er.target()].cell.position()))
+                                         .filter(|&(p0, p1)| (p0 - p1).norm_squared() < RENDER_LENGTH_LIMIT)
                                          .flat_map(|(p0, p1)| once(Node{position: [p0.x as f32, p0.y as f32],
                                             inner_color: [0.0, 0.0, 0.0, 1.0],
                                             falloff: 0.25,

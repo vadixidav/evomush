@@ -6,7 +6,6 @@ use zoom::{self, BasicParticle};
 use nalgebra::Vector2;
 use num::Zero;
 use petgraph::stable_graph::{NodeIndex, EdgeIndex};
-use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 use petgraph::Direction;
 use itertools::Itertools;
 
@@ -59,14 +58,14 @@ pub fn cell_physics_interactions(graph: &mut CellGraph) {
         }
     }
 
-    for nv in graph.edge_references().combinations(2) {
-        graph[nv[0].source()]
+    for nv in graph.node_indices().combinations(2) {
+        graph[nv[0]]
             .cell
-            .interact_repel(&graph[nv[1].source()].cell,
+            .interact_repel(&graph[nv[1]].cell,
                             compute_newton_coefficient((map_node_to_mag(&graph
-                                                                            [nv[0].source()]),
+                                                                            [nv[0]]),
                                                         map_node_to_mag(&graph
-                                                                            [nv[1].source()]))));
+                                                                            [nv[1]]))));
     }
 }
 

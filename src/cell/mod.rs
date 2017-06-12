@@ -6,8 +6,9 @@ use rand::Rng;
 use gapush::simple::{SimpleInstruction, PlainOp};
 use aux::area_box;
 use zoom::particle;
+use std::cell;
 
-const INIT_ENERGY: usize = 1 << 20;
+const INIT_ENERGY: usize = 1 << 16;
 const SIZE_TO_ENERGY_RATIO: f64 = 0.05;
 const ENERGY_TO_EXECUTION_RATIO: f64 = 20.0;
 const CELL_SIGMOID_COEFFICIENT: f64 = 0.01;
@@ -25,6 +26,7 @@ pub struct Cell {
     energy: usize,
     particle: particle::BasicParticle<na::Vector2<f64>, f64>,
     brain: brain::Brain,
+    closest_distance_squared: cell::Cell<Option<f64>>,
 }
 
 impl Cell {
@@ -35,6 +37,7 @@ impl Cell {
             energy: INIT_ENERGY,
             particle: particle,
             brain: brain::Brain::new_rand(energy_to_size(INIT_ENERGY), rng),
+            closest_distance_squared: cell::Cell::new(None),
         }
     }
 
@@ -45,6 +48,11 @@ impl Cell {
 
     pub fn energy(&self) -> usize {
         self.energy
+    }
+    pub fn closest_distance_squared(&self) -> Option<f64> {
+        let cds = self.closest_distance_squared.get().clone();
+        self.closest_distance_squared.set(None);
+        cds
     }
 
     pub fn create_state(&self,
@@ -140,6 +148,14 @@ impl Cell {
     }
 
     pub fn interact_repel(&self, other: &Self, newton: f64) {
+        use nalgebra::Norm;
+        let distance_squared = area_box().wrap_delta(self.particle.position - other.particle.position).norm_squared();
+        if self.closest_distance_squared.get().map(|d| d > distance_squared).unwrap_or(true) {
+            self.closest_distance_squared.set(Some(distance_squared));
+        }
+        if other.closest_distance_squared.get().map(|d| d > distance_squared).unwrap_or(true) {
+            other.closest_distance_squared.set(Some(distance_squared));
+        }
         particle::gravitate_radius_squared_delta(&self.particle, &other.particle,
                 GRAVITATE_RADIUS * GRAVITATE_RADIUS,
                 -newton,
