@@ -33,7 +33,7 @@ type CellGraph = petgraph::stable_graph::StableGraph<CellContainer, (cell::Conne
 
 const SEED: [u64; 4] = [0, 1, 2, 3];
 const CIRCLE_SCALE: f32 = 0.015;
-const DYNAMIC_ENERGY_GAIN_COEFFICIENT: f64 = 4.0;
+const DYNAMIC_ENERGY_GAIN_COEFFICIENT: f64 = 2.0;
 const RENDER_LENGTH_LIMIT: f64 = 1000.0;
 
 fn main() {
@@ -46,7 +46,7 @@ fn main() {
     gl_subsystem.set_context_minor_version(1);
 
     let display = video_subsystem
-        .window("My window", area_box().offset.x as u32 * 2, area_box().offset.y as u32 * 2)
+        .window("My window", 640, 640)
         .resizable()
         .build_glium()
         .unwrap();
