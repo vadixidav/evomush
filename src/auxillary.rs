@@ -105,13 +105,17 @@ pub fn divide_cell<R: Rng>(graph: &mut CellGraph, nix: NodeIndex<u32>, rng: &mut
             .edges_directed(nix, Outgoing)
             .map(|e| e.target())
             .collect::<Vec<_>>() {
-        graph.update_edge(nnix, edge_target, Default::default());
+        if graph.find_edge(edge_target, nnix).is_none() {
+            graph.update_edge(nnix, edge_target, Default::default());
+        }
     }
     for edge_source in graph
             .edges_directed(nix, Outgoing)
             .map(|e| e.source())
             .collect::<Vec<_>>() {
-        graph.update_edge(edge_source, nnix, Default::default());
+        if graph.find_edge(nnix, edge_source).is_none() {
+            graph.update_edge(edge_source, nnix, Default::default());
+        }
     }
 }
 
