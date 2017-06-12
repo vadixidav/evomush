@@ -46,7 +46,7 @@ fn main() {
     gl_subsystem.set_context_minor_version(1);
 
     let display = video_subsystem
-        .window("My window", 640, 640)
+        .window("Evomush", 640, 640)
         .resizable()
         .build_glium()
         .unwrap();
