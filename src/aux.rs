@@ -10,11 +10,11 @@ use petgraph::Direction;
 use itertools::Itertools;
 
 // Spring attraction force.
-const HOOKE_DYNAMIC: f64 = 0.000001;
-const HOOKE_STATIC: f64 = 0.000001;
+const HOOKE_DYNAMIC: f64 = 0.0001;
+const HOOKE_STATIC: f64 = 0.0001;
 // Gravitational repeling force.
-const NEWTON_DYNAMIC: f64 = 10.0;
-const NEWTON_STATIC: f64 = 10.0;
+const NEWTON_DYNAMIC: f64 = 10000.0;
+const NEWTON_STATIC: f64 = 10000.0;
 
 const INERTIA: f64 = 1.0;
 
@@ -122,11 +122,12 @@ fn compute_connection_state(graph: &mut CellGraph,
                             target_node: NodeIndex<u32>)
                             -> ConnectionState {
     use nalgebra::Norm;
+    use zoom::Toroid;
     let sent = match (direction, graph.edge_weight(target_edge).unwrap()) {
         (Direction::Outgoing, e) => e.1.signal.clone(),
         (Direction::Incoming, e) => e.0.signal.clone(),
     };
-    let length = (graph.node_weight(target_node).unwrap().cell.position() - source_position).norm();
+    let length = area_box().wrap_delta(graph.node_weight(target_node).unwrap().cell.position() - source_position).norm();
     ConnectionState {
         incoming: sent,
         length: length,

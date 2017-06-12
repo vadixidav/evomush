@@ -14,11 +14,11 @@ const ENERGY_TO_EXECUTION_RATIO: f64 = 20.0;
 const CELL_SIGMOID_COEFFICIENT: f64 = 0.01;
 const STATIC_ENERGY_CONSUMPTION: usize = 1 << 9;
 
-const DRAG_COEFFICIENT: f64 = 0.001;
+const DRAG_COEFFICIENT: f64 = 0.1;
 const PHYSICS_DELTA: f64 = 0.1;
 const GRAVITATE_RADIUS: f64 = 0.00001;
 
-const RANDOM_SHIFT_OFFSET: f64 = 50.0;
+const RANDOM_SHIFT_OFFSET: f64 = 100.0;
 const SEPARATION_THRESHOLD: f64 = 500.0;
 
 #[derive(Clone)]
@@ -128,9 +128,9 @@ impl Cell {
     pub fn random_shift<R: Rng>(&mut self, rng: &mut R) {
         use std::f64::consts::PI;
         let rand_angle = rng.next_f64() * PI * 2.0;
-        self.particle.position += na::Vector2::new(RANDOM_SHIFT_OFFSET * rand_angle.cos(),
+        let shift = na::Vector2::new(RANDOM_SHIFT_OFFSET * rand_angle.cos(),
             RANDOM_SHIFT_OFFSET * rand_angle.sin());
-        self.particle.position = area_box().wrap_position(self.particle.position);
+        self.particle.position = area_box().wrap_position(self.particle.position + shift);
     }
 
     pub fn update_physics(&mut self) {
