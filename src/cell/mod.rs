@@ -4,7 +4,7 @@ use zoom::*;
 use nalgebra as na;
 use rand::Rng;
 use gapush::simple::{SimpleInstruction, PlainOp};
-use aux::area_box;
+use auxillary::area_box;
 use zoom::particle;
 use std::cell;
 
