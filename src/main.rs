@@ -103,7 +103,6 @@ fn main() {
         }
 
         for eix in graph.edge_references().filter_map(|er| {
-            use petgraph::visit::EdgeRef;
             (er.weight().0.sever || er.weight().0.sever).as_some(er.id())
         }).collect::<Vec<_>>() {
             graph.remove_edge(eix);
