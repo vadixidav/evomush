@@ -33,7 +33,7 @@ type CellGraph = petgraph::stable_graph::StableGraph<CellContainer, (cell::Conne
 
 const SEED: [u64; 4] = [0, 1, 2, 3];
 const CIRCLE_SCALE: f32 = 0.015;
-const DYNAMIC_ENERGY_GAIN_COEFFICIENT: f64 = 2.0;
+const DYNAMIC_ENERGY_GAIN_COEFFICIENT: f64 = 1.0;
 const RENDER_LENGTH_LIMIT: f64 = 1000.0;
 
 fn main() {
