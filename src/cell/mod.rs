@@ -19,7 +19,7 @@ const PHYSICS_DELTA: f64 = 0.1;
 const GRAVITATE_RADIUS: f64 = 0.00001;
 
 const RANDOM_SHIFT_OFFSET: f64 = 50.0;
-const SEPARATION_THRESHOLD: f64 = 50.0;
+const SEPARATION_THRESHOLD: f64 = 500.0;
 
 #[derive(Clone)]
 pub struct Cell {
@@ -76,7 +76,7 @@ impl Cell {
             .map(|(length, (elasticity, signal, sever, cycles))| {
                      (cell_sigmoid(elasticity.unwrap_or(0)),
                       signal.unwrap_or(SimpleInstruction::PlainOp(PlainOp::Nop)),
-                      sever.unwrap_or(false) && length > SEPARATION_THRESHOLD,
+                      sever.unwrap_or(false) || length > SEPARATION_THRESHOLD,
                       cycles)
                  })
             .map(|(elasticity, signal, sever, cycles)| {

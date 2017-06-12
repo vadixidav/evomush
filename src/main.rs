@@ -34,7 +34,7 @@ type CellGraph = petgraph::stable_graph::StableGraph<CellContainer, (cell::Conne
 const SEED: [u64; 4] = [0, 1, 2, 3];
 const CIRCLE_SCALE: f32 = 0.01;
 const DYNAMIC_ENERGY_GAIN_COEFFICIENT: f64 = 40.0;
-const RENDER_LENGTH_LIMIT: f64 = 300.0;
+const RENDER_LENGTH_LIMIT: f64 = 1000.0;
 
 fn main() {
     use glium_sdl2::DisplayBuild;
