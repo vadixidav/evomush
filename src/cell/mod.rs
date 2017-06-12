@@ -10,7 +10,8 @@ use std::cell;
 
 const INIT_ENERGY: usize = 1 << 16;
 const SIZE_TO_ENERGY_RATIO: f64 = 0.05;
-const ENERGY_TO_EXECUTION_RATIO: f64 = 20.0;
+const CONSUMPTION_TO_EXECUTION_RATIO: f64 = 20.0;
+const CONSUMPTION_TO_SIZE_RATIO: f64 = 0.1;
 const CELL_SIGMOID_COEFFICIENT: f64 = 0.01;
 const STATIC_ENERGY_CONSUMPTION: usize = 1 << 9;
 
@@ -106,7 +107,9 @@ impl Cell {
         let (divide, divide_cycles) = self.brain.run_divide();
         let divide = divide.unwrap_or(false);
         self.energy = self.energy
-            .checked_sub(STATIC_ENERGY_CONSUMPTION + (ENERGY_TO_EXECUTION_RATIO *
+            .checked_sub(STATIC_ENERGY_CONSUMPTION +
+                            (CONSUMPTION_TO_SIZE_RATIO * self.brain.total_size() as f64) as usize +
+                            (CONSUMPTION_TO_EXECUTION_RATIO *
                           (cycle_cycles + out_connection_cycles + in_connection_cycles +
                            repulsion_cycles + die_cycles +
                            divide_cycles) as f64) as usize)

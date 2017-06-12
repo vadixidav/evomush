@@ -241,6 +241,20 @@ impl Brain {
                          }),
          len)
     }
+
+    /// Gets the total genome size.
+    pub fn total_size(&self) -> usize {
+        use heapsize::HeapSizeOf;
+        self.machine.state.heap_size_of_children() +
+            self.genome.init.gene_len() +
+            self.genome.cycle.gene_len() +
+            self.genome.connection_elasticity.gene_len() +
+            self.genome.connection_signal.gene_len() +
+            self.genome.connection_sever.gene_len() +
+            self.genome.repulsion.gene_len() +
+            self.genome.die.gene_len() +
+            self.genome.divide.gene_len()
+    }
 }
 
 fn instruction_handler() -> SimpleInstruction {
