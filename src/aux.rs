@@ -100,18 +100,18 @@ pub fn divide_cell<R: Rng>(graph: &mut CellGraph, nix: NodeIndex<u32>, rng: &mut
     };
 
     let nnix = graph.add_node(cc);
-    graph.add_edge(nix, nnix, Default::default());
+    graph.update_edge(nix, nnix, Default::default());
     for edge_target in graph
             .edges_directed(nix, Outgoing)
             .map(|e| e.target())
             .collect::<Vec<_>>() {
-        graph.add_edge(nnix, edge_target, Default::default());
+        graph.update_edge(nnix, edge_target, Default::default());
     }
     for edge_source in graph
             .edges_directed(nix, Outgoing)
             .map(|e| e.source())
             .collect::<Vec<_>>() {
-        graph.add_edge(edge_source, nnix, Default::default());
+        graph.update_edge(edge_source, nnix, Default::default());
     }
 }
 

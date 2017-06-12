@@ -33,7 +33,7 @@ type CellGraph = petgraph::stable_graph::StableGraph<CellContainer, (cell::Conne
 
 const SEED: [u64; 4] = [0, 1, 2, 3];
 const CIRCLE_SCALE: f32 = 0.015;
-const DYNAMIC_ENERGY_GAIN_COEFFICIENT: f64 = 40.0;
+const DYNAMIC_ENERGY_GAIN_COEFFICIENT: f64 = 20.0;
 const RENDER_LENGTH_LIMIT: f64 = 1000.0;
 
 fn main() {
@@ -172,14 +172,14 @@ fn main() {
                                          .filter(|&(p0, p1)| (p0 - p1).norm_squared() < RENDER_LENGTH_LIMIT.powi(2))
                                          .flat_map(|(p0, p1)| once(Node{position: [p0.x as f32, p0.y as f32],
                                             inner_color: [0.0, 0.0, 0.0, 1.0],
-                                            falloff: 0.25,
-                                            falloff_color: [0.0, 0.5, 0.0, 1.0],
+                                            falloff: 0.2,
+                                            falloff_color: [0.0, 0.2, 0.0, 1.0],
                                             falloff_radius: CIRCLE_SCALE * area_box().offset.y as f32,
                                             inner_radius: 0.0}).chain(once(
                                                 Node{position: [p1.x as f32, p1.y as f32],
                                             inner_color: [0.0, 0.0, 0.0, 1.0],
-                                            falloff: 0.25,
-                                            falloff_color: [0.0, 0.5, 0.5, 1.0],
+                                            falloff: 0.2,
+                                            falloff_color: [0.0, 0.2, 0.0, 1.0],
                                             falloff_radius: CIRCLE_SCALE * area_box().offset.y as f32,
                                             inner_radius: 0.0}
                                             )))
