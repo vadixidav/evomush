@@ -31,9 +31,11 @@ use nalgebra::Norm;
 /// The cell it goes out from is the first weight and vice versa.
 type CellGraph = petgraph::stable_graph::StableGraph<CellContainer, (cell::ConnectionDelta, cell::ConnectionDelta)>;
 
+const SIZE_SCALE: f64 = 0.6;
+
 const SEED: [u64; 4] = [0, 1, 2, 3];
-const CIRCLE_SCALE: f32 = 0.015;
-const DYNAMIC_ENERGY_GAIN_COEFFICIENT: f64 = 1.5;
+const CIRCLE_SCALE: f32 = 0.015 / SIZE_SCALE as f32;
+const DYNAMIC_ENERGY_GAIN_COEFFICIENT: f64 = 1.0;
 const RENDER_LENGTH_LIMIT: f64 = 1000.0;
 
 fn main() {

@@ -9,6 +9,8 @@ use petgraph::stable_graph::{NodeIndex, EdgeIndex};
 use petgraph::Direction;
 use itertools::Itertools;
 
+use SIZE_SCALE;
+
 // Spring attraction force.
 const HOOKE_DYNAMIC: f64 = 0.002;
 const HOOKE_STATIC: f64 = 0.001;
@@ -18,12 +20,12 @@ const NEWTON_STATIC: f64 = 10000.0;
 
 const INERTIA: f64 = 1.0;
 
-const CELL_SPAWN_PROBABILITY: f64 = 0.6;
+const CELL_SPAWN_PROBABILITY: f64 = 0.5 * SIZE_SCALE * SIZE_SCALE;
 
 pub fn area_box() -> zoom::Box<Vector2<f64>> {
     zoom::Box {
         origin: Vector2::new(0.0, 0.0),
-        offset: Vector2::new(2000.0, 2000.0),
+        offset: Vector2::new(2000.0, 2000.0) * SIZE_SCALE,
     }
 }
 
