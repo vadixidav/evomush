@@ -31,7 +31,7 @@ use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 type CellGraph = petgraph::stable_graph::StableGraph<CellContainer, (cell::ConnectionDelta, cell::ConnectionDelta)>;
 
 const SEED: [u64; 4] = [0, 1, 2, 3];
-const CIRCLE_SCALE: f32 = 0.05;
+const CIRCLE_SCALE: f32 = 0.01;
 
 fn main() {
     use glium_sdl2::DisplayBuild;

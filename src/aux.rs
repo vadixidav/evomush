@@ -14,12 +14,12 @@ use itertools::Itertools;
 const HOOKE_DYNAMIC: f64 = 0.00001;
 const HOOKE_STATIC: f64 = 0.00001;
 // Gravitational repeling force.
-const NEWTON_DYNAMIC: f64 = 0.1;
-const NEWTON_STATIC: f64 = 0.1;
+const NEWTON_DYNAMIC: f64 = 10.0;
+const NEWTON_STATIC: f64 = 10.0;
 
 const INERTIA: f64 = 1.0;
 
-const CELL_SPAWN_PROBABILITY: f64 = 0.001;
+const CELL_SPAWN_PROBABILITY: f64 = 0.05;
 
 pub fn area_box() -> zoom::Box<Vector2<f64>> {
     zoom::Box {
