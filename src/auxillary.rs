@@ -12,11 +12,11 @@ use itertools::Itertools;
 use SIZE_SCALE;
 
 // Spring attraction force.
-const HOOKE_DYNAMIC: f64 = 0.002;
-const HOOKE_STATIC: f64 = 0.001;
+const HOOKE_DYNAMIC: f64 = 0.1;
+const HOOKE_STATIC: f64 = 0.01;
 // Gravitational repeling force.
-const NEWTON_DYNAMIC: f64 = 10000.0;
-const NEWTON_STATIC: f64 = 10000.0;
+const NEWTON_DYNAMIC: f64 = 200000.0;
+const NEWTON_STATIC: f64 = 50000.0;
 
 const INERTIA: f64 = 1.0;
 
