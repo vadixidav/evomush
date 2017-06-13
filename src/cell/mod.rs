@@ -16,7 +16,7 @@ const CELL_SIGMOID_COEFFICIENT: f64 = 0.01;
 const STATIC_ENERGY_CONSUMPTION: usize = 1 << 9;
 
 const DRAG_COEFFICIENT: f64 = 0.1;
-const PHYSICS_DELTA: f64 = 0.05;
+const PHYSICS_DELTA: f64 = 0.02;
 const GRAVITATE_RADIUS: f64 = 0.00001;
 
 const RANDOM_SHIFT_OFFSET: f64 = 100.0;
@@ -140,6 +140,10 @@ impl Cell {
         self.particle.drag(DRAG_COEFFICIENT);
         self.particle.advance(PHYSICS_DELTA);
         self.particle.position = area_box().wrap_position(self.particle.position);
+    }
+
+    pub fn impulse(&self, v: na::Vector2<f64>) {
+        self.particle.impulse(&v);
     }
 
     pub fn position(&self) -> na::Vector2<f64> {

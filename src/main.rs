@@ -38,6 +38,9 @@ const CIRCLE_SCALE: f32 = 0.015 / SIZE_SCALE as f32;
 const DYNAMIC_ENERGY_GAIN_COEFFICIENT: f64 = 1.0;
 const RENDER_LENGTH_LIMIT: f64 = 1000.0;
 
+const CENTER_BAND_RATIO: f64 = 0.5;
+const CENTER_BAND_ACCELERATION: f64 = 100.0;
+
 fn main() {
     use glium_sdl2::DisplayBuild;
     use rand::SeedableRng;
@@ -90,6 +93,11 @@ fn main() {
 
         // Advance physics
         for nix in graph.node_indices().collect::<Vec<_>>() {
+            let y = graph[nix].cell.position().y;
+            if y.abs() < area_box().offset.y * CENTER_BAND_RATIO {
+                graph[nix].cell.impulse(nalgebra::Vector2::new(
+                    y / (area_box().offset.y * CENTER_BAND_RATIO) * CENTER_BAND_ACCELERATION, 0.0));
+            }
             graph[nix].cell.update_physics();
         }
 
